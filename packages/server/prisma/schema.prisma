@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       BigInt @id
+  email    String @unique
+  username String @unique
+
+  bilibiliVideoLikes BilibiliVideoLike[]
+  bilibiliBookmarks  BilibiliBookmark[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BilibiliVideo {
+  id                     BigInt                  @id
+  extra                  Json                    @default("{}") @db.JsonB
+  bilibiliVideoLikes     BilibiliVideoLike[]
+  bilibiliBookmarkVideos BilibiliBookmarkVideo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model BilibiliBookmark {
+  id     BigInt @id
+  userid BigInt
+
+  user                  User                    @relation(fields: [userid], references: [id])
+  BilibiliBookmarkVideo BilibiliBookmarkVideo[]
+}
+
+model BilibiliBookmarkVideo {
+  id         BigInt @id
+  bookmarkId BigInt
+  VideoId    BigInt
+
+  bilibiliBookmark BilibiliBookmark @relation(fields: [bookmarkId], references: [id])
+  bilibiliVideo    BilibiliVideo    @relation(fields: [VideoId], references: [id])
+}
+
+model BilibiliVideoLike {
+  id              BigInt @id
+  bilibiliVideoId BigInt
+  userId          BigInt
+
+  user          User          @relation(fields: [userId], references: [id])
+  bilibiliVideo BilibiliVideo @relation(fields: [bilibiliVideoId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([bilibiliVideoId, userId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
